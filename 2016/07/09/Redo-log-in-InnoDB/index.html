@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>Redo log in InnoDB | Mind &amp; Hand</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="Mechanism of redo log">
+<meta name="keywords" content="database,mysql,storage">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redo log in InnoDB">
+<meta property="og:url" content="http://tsaijin.github.io/2016/07/09/Redo-log-in-InnoDB/index.html">
+<meta property="og:site_name" content="Mind &amp; Hand">
+<meta property="og:description" content="Mechanism of redo log">
+<meta property="og:locale" content="en">
+<meta property="og:image" content="http://tsaijin.github.io/images/redo-log/1.jpg">
+<meta property="og:updated_time" content="2020-04-13T11:45:24.247Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Redo log in InnoDB">
+<meta name="twitter:description" content="Mechanism of redo log">
+<meta name="twitter:image" content="http://tsaijin.github.io/images/redo-log/1.jpg">
+<meta name="twitter:creator" content="@true">
+<link rel="publisher" href="true">
+<meta property="fb:admins" content="true">
+<meta property="fb:app_id" content="true">
+  
+    <link rel="alternative" href="/atom.xml" title="Mind &amp; Hand" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css">
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-76818939-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+</head></html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Mind &amp; Hand</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/about">About</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://tsaijin.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-Redo-log-in-InnoDB" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2016/07/09/Redo-log-in-InnoDB/" class="article-date">
+  <time datetime="2016-07-09T09:13:59.000Z" itemprop="datePublished">2016-07-09</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Database/">Database</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Redo log in InnoDB
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="What-is-redo-log"><a href="#What-is-redo-log" class="headerlink" title="What is redo log"></a>What is redo log</h2><p>For a relational database, ACID is a set of properties that it must support for a transaction. That is to say, a transaction should be atomic, consistent, isolated and durable under the management of such database.<br>InnoDB, the default storage engine since MySQL 5.5, use a method called <strong>redo log</strong> to implement the durability of a transaction. Redo log consists of redo log buffer and redo log file.<br>The redo log buffer resides in memory and is volatile while the redo log file resides in disks and is durable. Redo log records the information about a transaction. As the literal meaning of words redo log denotes, you can redo your operations after the system crashes by redo log.</p>
+<h2 id="How-does-it-work"><a href="#How-does-it-work" class="headerlink" title="How does it work"></a>How does it work</h2><p>As a transaction-based storage engine, InnoDB uses “force log at commit” mechanism to achieve  durability.<br>So before a transaction is committed, all logs of that transaction must be flushed to redo log files. Even though the whole system crashes during the process of transaction commit, this transaction can be recovered by the redo log file after the system boots up again.<br>There exist a redo log memory buffer where the redo log is written to boost system performance. To ensure that redo log is written to redo log file successfully each time, the InnoDB storage engine need to call the <code>fsync</code> because <code>O_DIRECT</code> flag is not used when open redo log so that redo log is written to file system buffer firstly. Nevertheless, the time consumed by <code>fsync</code> call is up to the performance of disk. Consequently, the performance of disk determines the performance of transaction commit.<a href="http://dev.mysql.com/doc/refman/5.7/en/innodb-parameters.html" target="_blank" rel="noopener">Reference1</a></p>
+<p>Taking account of the performance problem mentioned previously, the InnoDB storage engine allows user to set up the frequency of calling <code>fsync</code>. Specifically, parameter <code>innodb_flush_log_at_trx_commit</code> is used for frequency management. <code>innodb_flush_log_at_trx_commit</code> controls the balance between strict ACID compliance for commit operations, and higher performance that is possible when commit-related I/O operations are rearranged and done in batches. You can achieve better performance by changing the default value, but then you can lose up to a second of transactions in a crash.  </p>
+<ul>
+<li>The default value of 1 is required for full ACID compliance. With this value, the contents of the InnoDB log buffer are written out to the log file at each transaction commit and the log file is flushed to disk.  </li>
+<li>With a value of 0, the contents of the InnoDB log buffer are written to the log file approximately once per second and the log file is flushed to disk. No writes from the log buffer to the log file are performed at transaction commit. Once-per-second flushing is not 100% guaranteed to happen every second, due to process scheduling issues. Because the flush to disk operation only occurs approximately once per second, you can lose up to a second of transactions with any mysqld process crash</li>
+<li>With a value of 2, the contents of the InnoDB log buffer are written to the log file after each transaction commit and the log file is flushed to disk approximately once per second. Once-per-second flushing is not 100% guaranteed to happen every second, due to process scheduling issues. Because the flush to disk operation only occurs approximately once per second, you can lose up to a second of transactions in an operating system crash or a power outage.<a href="https://book.douban.com/subject/25872763/" target="_blank" rel="noopener">Reference2</a></li>
+</ul>
+<h2 id="The-format-of-redo-log-file"><a href="#The-format-of-redo-log-file" class="headerlink" title="The format of redo log file"></a>The format of redo log file</h2><p>In InnoDB storage engine, the redo logs are stored in 512-byte format. This means that redo log cache, redo log files are both kept in blocks and each bock has a size of 512 bytes. Besides the log itself in block, log block header and lock block tailer are also stored in each block. In a redo log block, 12 bytes and 8 bytes are occupied by redo log header and redo log tailer respectively(So real information stored in each block is 492 bytes).<br><img src="/images/redo-log/1.jpg" alt="redo-log-block">  </p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://tsaijin.github.io/2016/07/09/Redo-log-in-InnoDB/" data-id="ck8yi31fa000gm9pkqubk7svv" class="article-share-link">Share</a>
+      
+        <a href="http://tsaijin.github.io/2016/07/09/Redo-log-in-InnoDB/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/database/">database</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/mysql/">mysql</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/storage/">storage</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2016/04/23/Compile-your-own-linux-kernel/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Compile your own linux kernel</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Database/">Database</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/kernel/">kernel</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/linux/">linux</a><span class="category-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/C/">C</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/database/">database</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/kernel/">kernel</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/linux/">linux</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql/">mysql</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/storage/">storage</a><span class="tag-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/C/" style="font-size: 10px;">C</a> <a href="/tags/database/" style="font-size: 10px;">database</a> <a href="/tags/kernel/" style="font-size: 20px;">kernel</a> <a href="/tags/linux/" style="font-size: 20px;">linux</a> <a href="/tags/mysql/" style="font-size: 10px;">mysql</a> <a href="/tags/storage/" style="font-size: 10px;">storage</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/07/">July 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/04/">April 2016</a><span class="archive-list-count">2</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2016/07/09/Redo-log-in-InnoDB/">Redo log in InnoDB</a>
+          </li>
+        
+          <li>
+            <a href="/2016/04/23/Compile-your-own-linux-kernel/">Compile your own linux kernel</a>
+          </li>
+        
+          <li>
+            <a href="/2016/04/12/Read-and-Write-functions-in-linux/">Read and Write functions in linux</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2020 Jin Tsai<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/about" class="mobile-nav-link">About</a>
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'tsaijin';
+  
+  var disqus_url = 'http://tsaijin.github.io/2016/07/09/Redo-log-in-InnoDB/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+  </div>
+</body>
+</html>

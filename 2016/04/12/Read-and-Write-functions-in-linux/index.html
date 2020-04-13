@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>Read and Write functions in linux | Mind &amp; Hand</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="Introduction to various Read and Write functions in linux.">
+<meta name="keywords" content="linux,kernel,C">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Read and Write functions in linux">
+<meta property="og:url" content="http://tsaijin.github.io/2016/04/12/Read-and-Write-functions-in-linux/index.html">
+<meta property="og:site_name" content="Mind &amp; Hand">
+<meta property="og:description" content="Introduction to various Read and Write functions in linux.">
+<meta property="og:locale" content="en">
+<meta property="og:updated_time" content="2020-04-13T11:45:24.247Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Read and Write functions in linux">
+<meta name="twitter:description" content="Introduction to various Read and Write functions in linux.">
+<meta name="twitter:creator" content="@true">
+<link rel="publisher" href="true">
+<meta property="fb:admins" content="true">
+<meta property="fb:app_id" content="true">
+  
+    <link rel="alternative" href="/atom.xml" title="Mind &amp; Hand" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css">
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-76818939-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+</head></html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Mind &amp; Hand</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/about">About</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://tsaijin.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-Read-and-Write-functions-in-linux" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2016/04/12/Read-and-Write-functions-in-linux/" class="article-date">
+  <time datetime="2016-04-11T16:07:24.000Z" itemprop="datePublished">2016-04-12</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/linux/">linux</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Read and Write functions in linux
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Resulting from work, I have learned I/O models of the linux operating system during these days. In linux operating system, various read and write APIs are provided to user space for use. Comparasions between them are illustraed below.  </p>
+<a id="more"></a>
+<h3 id="read"><a href="#read" class="headerlink" title="read()"></a>read()</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;</span></span></span><br><span class="line"><span class="function"><span class="keyword">ssize_t</span> <span class="title">read</span><span class="params">(<span class="keyword">int</span> fd, <span class="keyword">void</span> *buf, <span class="keyword">size_t</span> count)</span></span>;</span><br></pre></td></tr></table></figure>
+<p><code>read()</code> is the basic read function in linux environment. It attempts to read up to count bytes from file descriptor fd into the buffer starting at buf.<br>It will start from current file offset. And the current file offset will be increased by the number of bytes read. However, if current file offset is at or past the end of operating file, no bytes will be read into buffer.<br>On success, the number of bytes read is returned (zero indicates end of file), and the file position is advanced by this number. It is not an error if this number is smaller than the number of bytes requested; this may happen for example because fewer bytes are actually available right now (maybe because we were close to end-of-file, or because we are reading from a pipe, or from a terminal), or because <code>read()</code> was interrupted by a signal. On error, -1 is returned, and errno is set appropriately. In this case it is left unspecified whether the file position (if any) changes.<a href="http://linux.die.net/man/2/read" target="_blank" rel="noopener">Reference</a><br><code>read()</code> is thread safe in the sense that your program will not have undefined behavior (crash or hung) if multiple threads perform IO on the same open file using at once. But the order and atomicity of these operations could vary greatly depending on the type of the file and the implementation of program.</p>
+<h3 id="lseek"><a href="#lseek" class="headerlink" title="lseek()"></a>lseek()</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/types.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;</span></span></span><br><span class="line"><span class="function"><span class="keyword">off_t</span> <span class="title">lseek</span><span class="params">(<span class="keyword">int</span> fd, <span class="keyword">off_t</span> offset, <span class="keyword">int</span> whence)</span></span>;</span><br></pre></td></tr></table></figure>
+<p>The <code>lseek()</code> function repositions the offset of the open file associated with the file descriptor fd to the argument offset according to the directive whence<br>The directive whence can be as follows:<br><strong>SEEK_SET</strong>         The offset is set to offset bytes.<br><strong>SEEK_CUR</strong>        The offset is set to its current location plus offset bytes.<br><strong>SEEK_END</strong>        The offset is set to the size of the file plus offset bytes.<br>When whence is as the last one, <code>lseek()</code> function allows the file offset to be set beyond the size of file while the file size still keeps the same. If data is latter write at this point, subsequent reads of the data in the gap (as a “hole”) return null bytes until data is actually written to this gap.  <a href="http://linux.die.net/man/2/lseek" target="_blank" rel="noopener">Reference</a><br>There are some special usage methods about <code>lseek()</code>:</p>
+<ol>
+<li><code>lseek(int fildes, 0, SEEK_SET)</code>:<br> move the read or write position to the start of the file</li>
+<li><code>lseek(int fildes, 0, SEEK_END)</code>:<br> move the read or write position to the end of the file</li>
+<li><code>lseek(int fildes, 0, SEEK_CUR)</code>:<br> get the current read or write position of the file</li>
+</ol>
+<p>With <code>lseek()</code>, you can implement the random I/O models of read and write easily.</p>
+<h3 id="pread"><a href="#pread" class="headerlink" title="pread()"></a>pread()</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;</span></span></span><br><span class="line"><span class="function"><span class="keyword">ssize_t</span> <span class="title">pread</span><span class="params">(<span class="keyword">int</span> fd, <span class="keyword">void</span> *buf, <span class="keyword">size_t</span> count, <span class="keyword">off_t</span> offset)</span></span>;</span><br></pre></td></tr></table></figure>
+<p>Similar to <code>read()</code>, <code>pread()</code> attempts to read count bytes from file descriptor fd at offset into buffer starting at buf. Unlike <code>read()</code>, the offset here will be not changed after the call of <code>pread</code><br>In many cases <code>pread()</code> is the only option when you’re dealing with threads reading from a database or such.<br>Compared with <code>read()</code>, <code>pread()</code> does more than <code>read()</code> on account of the time to positioning offset.  From the work mechanism of <code>pread()</code>,  we can find that it is like the combination of <code>read()</code> and <code>lseek()</code>. Nevertheless, performance of <code>pread()</code> is quite higher than the combination of <code>read()</code> and <code>lseek()</code>.<br>As mentioned above, <code>read()</code> function will be in mess when multiple threads or processes perform IO operations on the same open file because it will increase the current file offset. On the flip side, <code>pread()</code> do not change the position in the open file so it is more convenient to using in the scenario of multiple threads and processes.  </p>
+<h3 id="pwrite"><a href="#pwrite" class="headerlink" title="pwrite()"></a>pwrite()</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;</span></span></span><br><span class="line"><span class="function"><span class="keyword">ssize_t</span> <span class="title">pwrite</span><span class="params">(<span class="keyword">int</span> fd, <span class="keyword">const</span> <span class="keyword">void</span> *buf, <span class="keyword">size_t</span> nbytes, <span class="keyword">off_t</span> offset)</span></span>;</span><br><span class="line">				Returns: number of bytes written <span class="keyword">if</span> OK, −<span class="number">1</span> on error</span><br></pre></td></tr></table></figure>
+<p>Calling <code>pwrite()</code> is equivalent to calling <code>lseek()</code> followed by a call to <code>write()</code>. Instead of calling <code>lseesk()</code> and <code>write()</code> separately, the combination of <code>lseek()</code> and <code>write()</code> is atomic operation in <code>pwrite()</code>.</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://tsaijin.github.io/2016/04/12/Read-and-Write-functions-in-linux/" data-id="ck8yi31ew0001m9pkljdbkzti" class="article-share-link">Share</a>
+      
+        <a href="http://tsaijin.github.io/2016/04/12/Read-and-Write-functions-in-linux/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/C/">C</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/kernel/">kernel</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/linux/">linux</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2016/04/23/Compile-your-own-linux-kernel/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Compile your own linux kernel
+        
+      </div>
+    </a>
+  
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Database/">Database</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/kernel/">kernel</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/linux/">linux</a><span class="category-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/C/">C</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/database/">database</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/kernel/">kernel</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/linux/">linux</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql/">mysql</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/storage/">storage</a><span class="tag-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/C/" style="font-size: 10px;">C</a> <a href="/tags/database/" style="font-size: 10px;">database</a> <a href="/tags/kernel/" style="font-size: 20px;">kernel</a> <a href="/tags/linux/" style="font-size: 20px;">linux</a> <a href="/tags/mysql/" style="font-size: 10px;">mysql</a> <a href="/tags/storage/" style="font-size: 10px;">storage</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/07/">July 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/04/">April 2016</a><span class="archive-list-count">2</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2016/07/09/Redo-log-in-InnoDB/">Redo log in InnoDB</a>
+          </li>
+        
+          <li>
+            <a href="/2016/04/23/Compile-your-own-linux-kernel/">Compile your own linux kernel</a>
+          </li>
+        
+          <li>
+            <a href="/2016/04/12/Read-and-Write-functions-in-linux/">Read and Write functions in linux</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2020 Jin Tsai<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/about" class="mobile-nav-link">About</a>
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'tsaijin';
+  
+  var disqus_url = 'http://tsaijin.github.io/2016/04/12/Read-and-Write-functions-in-linux/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+  </div>
+</body>
+</html>
