@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+<head>
+    <meta charset="utf-8">
+<title>Category: Technology</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
+
+
+
+
+<meta name="description" content="">
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ovo|Source+Code+Pro">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/css/lightgallery.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/css/justifiedGallery.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+<script defer src="//use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
+
+
+<meta name="generator" content="Hexo 4.2.1"></head>
+<body>
+    
+<nav class="navbar is-transparent is-fixed-top navbar-main" role="navigation" aria-label="main navigation">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item navbar-logo" href="/">
+                
+                <img src="/images/logo.png" alt="" height="28">
+                
+            </a>
+            <div class="navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="navbar-menu navbar-start">
+            
+            <a class="navbar-item "
+               href="/archives">Archives</a>
+            
+            <a class="navbar-item is-active"
+               href="/categories/Technology">Technology</a>
+            
+        </div>
+        
+        <div class="navbar-menu navbar-end">
+            
+            
+            
+        </div>
+    </div>
+</nav>
+
+    <section class="section section-heading">
+    <div class="container">
+        <div class="content">
+            <h5><i class="far fa-folder"></i>Technology</h5>
+        </div>
+    </div>
+</section>
+<section class="section">
+    <div class="container">
+    
+        <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            <a href="/2020/05/16/The-mechanism-behind-WriteBatch-in-leveldb/" itemprop="url">The mechanism behind WriteBatch in leveldb</a>
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            <time datetime="2020-05-16T12:59:09.000Z" itemprop="datePublished">May 16 2020</time>
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/categories/Technology/">Technology</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
+            
+            
+            9 minutes read (About 1362 words)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><h3 id="Introduction"><a href="#Introduction" class="headerlink" title="Introduction"></a>Introduction</h3><p>As a well-known key-value database,<a href="https://github.com/google/leveldb" target="_blank" rel="noopener"> leveldb</a> provides general key-values interfaces like Put, Get and Delete. Besides those interfaces, leveldb provides a batch operation called WriteBatch as well. A batch operation means we can group multiple operations into one and submit this one to leveldb, the atomicity guarantees that either all of those operations are applied or none of them is applied.</p>
+<p>For example, we can use batch operation in leveldb in the following way:</p>
+<p><epacse hidden>0</epacse></p>
+<p>The updates are applied in the order in which they are added to the WriteBatch. And the value of &#x201C;key&#x201D; in the above code sample will be &#x201C;v3&#x201D; after the batch is written.</p>
+<h3 id="Implementaion-of-WriteBatch"><a href="#Implementaion-of-WriteBatch" class="headerlink" title="Implementaion of WriteBatch"></a>Implementaion of WriteBatch</h3><p>Well, how does leveldb implement this simple but powerful interface? Let&#x2019;s figure it out by digging the source code step by step.</p></body></html>
+        <p class="article-more-link">
+            <a href="/2020/05/16/The-mechanism-behind-WriteBatch-in-leveldb/#more">Read More</a>
+        </p>
+    
+    </div>
+    
+    
+</article>
+
+
+
+
+    
+        <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            <a href="/2016/07/09/Redo-log-in-InnoDB/" itemprop="url">Redo log in InnoDB</a>
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            <time datetime="2016-07-09T09:33:15.000Z" itemprop="datePublished">Jul 9 2016</time>
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/categories/Technology/">Technology</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
+            
+            
+            5 minutes read (About 689 words)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><h2 id="What-is-redo-log"><a href="#What-is-redo-log" class="headerlink" title="What is redo log"></a>What is redo log</h2><p>For a relational database, ACID is a set of properties that it must support for a transaction. That is to say, a transaction should be atomic, consistent, isolated and durable under the management of such database.<br>InnoDB, the default storage engine since MySQL 5.5, use a method called <strong>redo log</strong> to implement the durability of a transaction. Redo log consists of redo log buffer and redo log file.<br>The redo log buffer resides in memory and is volatile while the redo log file resides in disks and is durable. Redo log records the information about a transaction. As the literal meaning of words redo log denotes, you can redo your operations after the system crashes by redo log.</p></body></html>
+        <p class="article-more-link">
+            <a href="/2016/07/09/Redo-log-in-InnoDB/#more">Read More</a>
+        </p>
+    
+    </div>
+    
+    
+</article>
+
+
+
+
+    
+        <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            <a href="/2016/04/12/Read-and-Write-functions-in-linux/" itemprop="url">Read and Write functions in linux</a>
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            <time datetime="2016-04-12T13:43:21.000Z" itemprop="datePublished">Apr 12 2016</time>
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/categories/Technology/">Technology</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
+            
+            
+            5 minutes read (About 743 words)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><p>Resulting from work, I have learned I/O models of the linux operating system during these days. In linux operating system, various read and write APIs are provided to user space for use. Comparasions between them are illustraed below.</p>
+<h3 id="read"><a href="#read" class="headerlink" title="read()"></a>read()</h3><p><epacse hidden>8</epacse></p>
+<p><code>read()</code> is the basic read function in linux environment. It attempts to read up to count bytes from file descriptor fd into the buffer starting at buf.<br>It will start from current file offset. And the current file offset will be increased by the number of bytes read. However, if current file offset is at or past the end of operating file, no bytes will be read into buffer.<br>On success, the number of bytes read is returned (zero indicates end of file), and the file position is advanced by this number. It is not an error if this number is smaller than the number of bytes requested; this may happen for example because fewer bytes are actually available right now (maybe because we were close to end-of-file, or because we are reading from a pipe, or from a terminal), or because <code>read()</code> was interrupted by a signal. On error, -1 is returned, and errno is set appropriately. In this case it is left unspecified whether the file position (if any) changes.<a href="http://linux.die.net/man/2/read" target="_blank" rel="noopener">Reference</a><br><code>read()</code> is thread safe in the sense that your program will not have undefined behavior (crash or hung) if multiple threads perform IO on the same open file using at once. But the order and atomicity of these operations could vary greatly depending on the type of the file and the implementation of program.</p></body></html>
+        <p class="article-more-link">
+            <a href="/2016/04/12/Read-and-Write-functions-in-linux/#more">Read More</a>
+        </p>
+    
+    </div>
+    
+    
+</article>
+
+
+
+
+    
+        <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            <a href="/2016/03/23/Compile-your-own-linux-kernel/" itemprop="url">Compile your own linux kernel</a>
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            <time datetime="2016-03-23T06:33:15.000Z" itemprop="datePublished">Mar 23 2016</time>
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/categories/Technology/">Technology</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
+            
+            
+            7 minutes read (About 1090 words)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><p>As we know, linux is one of the greatest open source projects in the world and serves millions of enterprises. An open source project means that you can define your own features catering to different application scenarios. All big Internet firms such as Google, Facebook and Aamazon recompile the linux kernel so that features can be added to or removed from the official kernel release version.<br>Compiling the kernel for linux kernel developers is also unavoidable. In the rest part of this post, attention will focus on tutorials on compiling a linux kernel.</p>
+<h3 id="1-Getting-the-kernel-source-of-official-release"><a href="#1-Getting-the-kernel-source-of-official-release" class="headerlink" title="1. Getting the kernel source of official release"></a>1. Getting the kernel source of official release</h3><p>Nothing comes from nothing. So the first thing before compiling a customized kernel is getting source code.<br>I strongly recommend using <code>Git</code> to download and manage the linux kernel source:</p>
+<p><epacse hidden>0</epacse></p></body></html>
+        <p class="article-more-link">
+            <a href="/2016/03/23/Compile-your-own-linux-kernel/#more">Read More</a>
+        </p>
+    
+    </div>
+    
+    
+</article>
+
+
+
+
+    
+    
+    </div>
+</section>
+    <footer class="footer">
+    <div class="container">
+        <div class="columns content">
+            <div class="column is-narrow has-text-centered">
+                &copy; 2020 Jin Cai&nbsp;
+                Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> & <a
+                        href="http://github.com/ppoffice/hexo-theme-minos">Minos</a>
+            </div>
+            <div class="column is-hidden-mobile"></div>
+
+            
+            
+        </div>
+    </div>
+</footer>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment-with-locales.min.js"></script>
+
+<!-- test if the browser is outdated -->
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" href="http://outdatedbrowser.com/" target="_blank" rel="noopener">Update my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // plugin function, place inside DOM ready function
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        })
+    });
+</script>
+
+<script>
+    window.FontAwesomeConfig = {
+        searchPseudoElements: true
+    }
+    moment.locale("en-AU");
+</script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+    
+</body>
+</html>

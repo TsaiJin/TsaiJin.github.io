@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+<head>
+    <meta charset="utf-8">
+<title>Read and Write functions in linux</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
+
+
+
+
+<meta name="description" content="">
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ovo|Source+Code+Pro">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/css/lightgallery.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/css/justifiedGallery.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+<script defer src="//use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
+
+
+<meta name="generator" content="Hexo 4.2.1"></head>
+<body>
+    
+<nav class="navbar is-transparent is-fixed-top navbar-main" role="navigation" aria-label="main navigation">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item navbar-logo" href="/">
+                
+                <img src="/images/logo.png" alt="" height="28">
+                
+            </a>
+            <div class="navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="navbar-menu navbar-start">
+            
+            <a class="navbar-item "
+               href="/archives">Archives</a>
+            
+            <a class="navbar-item "
+               href="/categories/Technology">Technology</a>
+            
+        </div>
+        
+        <div class="navbar-menu navbar-end">
+            
+            
+            
+        </div>
+    </div>
+</nav>
+
+    <section class="section">
+    <div class="container">
+    <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            Read and Write functions in linux
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            <time datetime="2016-04-12T13:43:21.000Z" itemprop="datePublished">Apr 12 2016</time>
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/categories/Technology/">Technology</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
+            
+            
+            5 minutes read (About 743 words)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><p>Resulting from work, I have learned I/O models of the linux operating system during these days. In linux operating system, various read and write APIs are provided to user space for use. Comparasions between them are illustraed below.</p>
+<h3 id="read"><a href="#read" class="headerlink" title="read()"></a>read()</h3><p></p><figure class="highlight plain hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;unistd.h&gt;</span><br><span class="line">ssize_t read(int fd, void *buf, size_t count);</span><br></pre></td></tr></tbody></table></figure><p></p>
+<p><code>read()</code> is the basic read function in linux environment. It attempts to read up to count bytes from file descriptor fd into the buffer starting at buf.<br>It will start from current file offset. And the current file offset will be increased by the number of bytes read. However, if current file offset is at or past the end of operating file, no bytes will be read into buffer.<br>On success, the number of bytes read is returned (zero indicates end of file), and the file position is advanced by this number. It is not an error if this number is smaller than the number of bytes requested; this may happen for example because fewer bytes are actually available right now (maybe because we were close to end-of-file, or because we are reading from a pipe, or from a terminal), or because <code>read()</code> was interrupted by a signal. On error, -1 is returned, and errno is set appropriately. In this case it is left unspecified whether the file position (if any) changes.<a href="http://linux.die.net/man/2/read" target="_blank" rel="noopener">Reference</a><br><code>read()</code> is thread safe in the sense that your program will not have undefined behavior (crash or hung) if multiple threads perform IO on the same open file using at once. But the order and atomicity of these operations could vary greatly depending on the type of the file and the implementation of program.</p>
+<a id="more"></a>
+
+<h3 id="lseek"><a href="#lseek" class="headerlink" title="lseek()"></a>lseek()</h3><p></p><figure class="highlight plain hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;sys/types.h&gt;</span><br><span class="line">#include &lt;unistd.h&gt;</span><br><span class="line">off_t lseek(int fd, off_t offset, int whence);</span><br></pre></td></tr></tbody></table></figure><p></p>
+<p>The <code>lseek()</code> function repositions the offset of the open file associated with the file descriptor fd to the argument offset according to the directive whence<br>The directive whence can be as follows:<br><strong>SEEK_SET</strong> The offset is set to offset bytes.<br><strong>SEEK_CUR</strong> The offset is set to its current location plus offset bytes.<br><strong>SEEK_END</strong> The offset is set to the size of the file plus offset bytes.<br>When whence is as the last one, <code>lseek()</code> function allows the file offset to be set beyond the size of file while the file size still keeps the same. If data is latter write at this point, subsequent reads of the data in the gap (as a &#x201C;hole&#x201D;) return null bytes until data is actually written to this gap. <a href="http://linux.die.net/man/2/lseek" target="_blank" rel="noopener">Reference</a><br>There are some special usage methods about <code>lseek()</code>:</p>
+<ol>
+<li><code>lseek(int fildes, 0, SEEK_SET)</code>:<br>move the read or write position to the start of the file</li>
+<li><code>lseek(int fildes, 0, SEEK_END)</code>:<br>move the read or write position to the end of the file</li>
+<li><code>lseek(int fildes, 0, SEEK_CUR)</code>:<br>get the current read or write position of the file</li>
+</ol>
+<p>With <code>lseek()</code>, you can implement the random I/O models of read and write easily.</p>
+<h3 id="pread"><a href="#pread" class="headerlink" title="pread()"></a>pread()</h3><p></p><figure class="highlight plain hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;unistd.h&gt;</span><br><span class="line">ssize_t pread(int fd, void *buf, size_t count, off_t offset);</span><br></pre></td></tr></tbody></table></figure><p></p>
+<p>Similar to <code>read()</code>, <code>pread()</code> attempts to read count bytes from file descriptor fd at offset into buffer starting at buf. Unlike <code>read()</code>, the offset here will be not changed after the call of <code>pread</code><br>In many cases <code>pread()</code> is the only option when you&#x2019;re dealing with threads reading from a database or such.<br>Compared with <code>read()</code>, <code>pread()</code> does more than <code>read()</code> on account of the time to positioning offset. From the work mechanism of <code>pread()</code>, we can find that it is like the combination of <code>read()</code> and <code>lseek()</code>. Nevertheless, performance of <code>pread()</code> is quite higher than the combination of <code>read()</code> and <code>lseek()</code>.<br>As mentioned above, <code>read()</code> function will be in mess when multiple threads or processes perform IO operations on the same open file because it will increase the current file offset. On the flip side, <code>pread()</code> do not change the position in the open file so it is more convenient to using in the scenario of multiple threads and processes.</p>
+<h3 id="pwrite"><a href="#pwrite" class="headerlink" title="pwrite()"></a>pwrite()</h3><p></p><figure class="highlight plain hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;unistd.h&gt;</span><br><span class="line">ssize_t pwrite(int fd, const void *buf, size_t nbytes, off_t offset);</span><br><span class="line">				Returns: number of bytes written if OK, &#x2212;1 on error</span><br></pre></td></tr></tbody></table></figure><p></p>
+<p>Calling <code>pwrite()</code> is equivalent to calling <code>lseek()</code> followed by a call to <code>write()</code>. Instead of calling <code>lseesk()</code> and <code>write()</code> separately, the combination of <code>lseek()</code> and <code>write()</code> is atomic operation in <code>pwrite()</code>.</p>
+</body></html>
+    
+    </div>
+    
+    <div class="columns is-variable is-1 is-multiline is-mobile">
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/linux/">#linux</a></span>
+    
+    </div>
+    
+    
+    <div class="columns is-mobile is-multiline article-nav">
+        <span class="column is-12-mobile is-half-desktop  article-nav-prev">
+            
+            <a href="/2016/07/09/Redo-log-in-InnoDB/">Redo log in InnoDB</a>
+            
+        </span>
+        <span class="column is-12-mobile is-half-desktop  article-nav-next">
+            
+            <a href="/2016/03/23/Compile-your-own-linux-kernel/">Compile your own linux kernel</a>
+            
+        </span>
+    </div>
+    
+</article>
+
+
+
+
+    </div>
+</section>
+    <footer class="footer">
+    <div class="container">
+        <div class="columns content">
+            <div class="column is-narrow has-text-centered">
+                &copy; 2020 Jin Cai&nbsp;
+                Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> & <a
+                        href="http://github.com/ppoffice/hexo-theme-minos">Minos</a>
+            </div>
+            <div class="column is-hidden-mobile"></div>
+
+            
+            
+        </div>
+    </div>
+</footer>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment-with-locales.min.js"></script>
+
+<!-- test if the browser is outdated -->
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" href="http://outdatedbrowser.com/" target="_blank" rel="noopener">Update my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // plugin function, place inside DOM ready function
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        })
+    });
+</script>
+
+<script>
+    window.FontAwesomeConfig = {
+        searchPseudoElements: true
+    }
+    moment.locale("en-AU");
+</script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+    
+</body>
+</html>

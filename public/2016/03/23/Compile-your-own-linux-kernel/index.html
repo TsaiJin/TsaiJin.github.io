@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+<head>
+    <meta charset="utf-8">
+<title>Compile your own linux kernel</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
+
+
+
+
+<meta name="description" content="">
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ovo|Source+Code+Pro">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/css/lightgallery.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/css/justifiedGallery.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+<script defer src="//use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
+
+
+<meta name="generator" content="Hexo 4.2.1"></head>
+<body>
+    
+<nav class="navbar is-transparent is-fixed-top navbar-main" role="navigation" aria-label="main navigation">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item navbar-logo" href="/">
+                
+                <img src="/images/logo.png" alt="" height="28">
+                
+            </a>
+            <div class="navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="navbar-menu navbar-start">
+            
+            <a class="navbar-item "
+               href="/archives">Archives</a>
+            
+            <a class="navbar-item "
+               href="/categories/Technology">Technology</a>
+            
+        </div>
+        
+        <div class="navbar-menu navbar-end">
+            
+            
+            
+        </div>
+    </div>
+</nav>
+
+    <section class="section">
+    <div class="container">
+    <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            Compile your own linux kernel
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            <time datetime="2016-03-23T06:33:15.000Z" itemprop="datePublished">Mar 23 2016</time>
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/categories/Technology/">Technology</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
+            
+            
+            7 minutes read (About 1090 words)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><p>As we know, linux is one of the greatest open source projects in the world and serves millions of enterprises. An open source project means that you can define your own features catering to different application scenarios. All big Internet firms such as Google, Facebook and Aamazon recompile the linux kernel so that features can be added to or removed from the official kernel release version.<br>Compiling the kernel for linux kernel developers is also unavoidable. In the rest part of this post, attention will focus on tutorials on compiling a linux kernel.</p>
+<h3 id="1-Getting-the-kernel-source-of-official-release"><a href="#1-Getting-the-kernel-source-of-official-release" class="headerlink" title="1. Getting the kernel source of official release"></a>1. Getting the kernel source of official release</h3><p>Nothing comes from nothing. So the first thing before compiling a customized kernel is getting source code.<br>I strongly recommend using <code>Git</code> to download and manage the linux kernel source:</p>
+<p></p><figure class="highlight plain hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git clone source_git_link</span><br></pre></td></tr></tbody></table></figure><p></p>
+<a id="more"></a>
+
+
+<p>Surely, you can also download the compressed package of source code and then uncompress it.<br>Go to the source code root directory, there exists a number of directories under it.</p>
+<img src="/2016/03/23/Compile-your-own-linux-kernel/kernel-directory.png" class title="kernel src file dir">
+
+<p>The following table[1] illustrates explanation about these directories.</p>
+<table>
+<thead>
+<tr>
+<th align="center">Directory</th>
+<th align="center">Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">arch</td>
+<td align="center">Architecture-specific source</td>
+</tr>
+<tr>
+<td align="center">block</td>
+<td align="center">Block I/O layer</td>
+</tr>
+<tr>
+<td align="center">certs</td>
+<td align="center">SSL/TLS certification</td>
+</tr>
+<tr>
+<td align="center">crypto</td>
+<td align="center">Crypto API</td>
+</tr>
+<tr>
+<td align="center">Documentation</td>
+<td align="center">Kernel source documentation</td>
+</tr>
+<tr>
+<td align="center">drivers</td>
+<td align="center">drivers Device</td>
+</tr>
+<tr>
+<td align="center">firmware</td>
+<td align="center">Device firmware needed to use certain drivers</td>
+</tr>
+<tr>
+<td align="center">fs</td>
+<td align="center">The VFS and the individual filesystems</td>
+</tr>
+<tr>
+<td align="center">include</td>
+<td align="center">Kernel headers</td>
+</tr>
+<tr>
+<td align="center">init</td>
+<td align="center">Kernel boot and initialization</td>
+</tr>
+<tr>
+<td align="center">ipc</td>
+<td align="center">Interprocess communication code</td>
+</tr>
+<tr>
+<td align="center">kernel</td>
+<td align="center">Core subsystems, such as the scheduler</td>
+</tr>
+<tr>
+<td align="center">lib</td>
+<td align="center">Helper routines</td>
+</tr>
+<tr>
+<td align="center">mm</td>
+<td align="center">Memory management subsystem and the VM</td>
+</tr>
+<tr>
+<td align="center">net</td>
+<td align="center">Networking subsystem</td>
+</tr>
+<tr>
+<td align="center">samples</td>
+<td align="center">Sample, demonstrative code</td>
+</tr>
+<tr>
+<td align="center">scripts</td>
+<td align="center">Scripts used to build the kernel</td>
+</tr>
+<tr>
+<td align="center">security</td>
+<td align="center">Linux Security Module</td>
+</tr>
+<tr>
+<td align="center">sound</td>
+<td align="center">Sound subsystem</td>
+</tr>
+<tr>
+<td align="center">usr</td>
+<td align="center">Early user-space code (called initramfs)</td>
+</tr>
+<tr>
+<td align="center">tools</td>
+<td align="center">Tools helpful for developing Linux</td>
+</tr>
+<tr>
+<td align="center">virt</td>
+<td align="center">Virtualization infrastructure</td>
+</tr>
+</tbody></table>
+<h3 id="2-Building-the-kernel-source-code"><a href="#2-Building-the-kernel-source-code" class="headerlink" title="2. Building the kernel source code"></a>2. Building the kernel source code</h3><p>After the first step, you come here. Now what you should do is configuring the kernel before compiling. As mentioned previously, it is possible to compile support into your kernel for only the specific features and drivers you want. Configuring the kernel is a required process before building it. By default, the kernel of official release version provides myriad features and supports a varied basket of hardware.</p>
+<h4 id="1-Configuration"><a href="#1-Configuration" class="headerlink" title="(1). Configuration"></a>(1). Configuration</h4><p>when you change your current working directory to the root directory of linux kernel source code, you will find there is a file named <strong>.config</strong>. Using command such as <code>cat .config | more</code> you can take a glimpse of its content.</p>
+<p></p><figure class="highlight plain hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cat .config | more</span><br></pre></td></tr></tbody></table></figure><p></p>
+<img src="/2016/03/23/Compile-your-own-linux-kernel/kernel-configuration.png" class title="kernel config file">
+
+<p>As shown in the picture, kernel configuration is controlled by configuration options, which are prefixed by <strong>CONFIG</strong> in the form <strong>CONFIG_FEATURE</strong>. That is to say, asynchronous IO is controlled by the configuration option <strong>CONFIG_AIO</strong>. This option enables POSIX asynchronous I/O which may by used by some high performance threaded applications<a href="http://cateee.net/lkddb/web-lkddb/AIO.html" target="_blank" rel="noopener">Reference</a>. When this option is set, AIO is enabled; if unset, AIO is disabled.<br>Configuration options that control the build process are either Booleans or tristates. A Boolean option is either yes or no. Kernel features, such as CONFIG_PREEMPT, are usually Booleans. A tristate option is one of yes, no, or module.The module setting represents a configuration option that is set but is to be compiled as a module (that is, a separate dynamically loadable object). In the case of tristates, a yes option explicitly means to compile the code into the main kernel image and not as a module. Drivers are usually represented by tristates[Reference][3].<br>Configuration options can also be strings or integers.These options do not control the build process but instead specify values that kernel source can access as a preprocessor macro. For example, a configuration option can specify the size of a statically allocated array[Reference][4].<br>Kernel provides multiple choices for you to facilitate configurations. A straightfoward way is using a graphical interactive interface: <code>make menuconfig</code>.</p>
+<p></p><figure class="highlight plain hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">make menuconfig</span><br></pre></td></tr></tbody></table></figure><p></p>
+<p>After typing this command, a graphical interactive interface will appears in your screen like this:</p>
+<img src="/2016/03/23/Compile-your-own-linux-kernel/kernel-menuconfig.png" class title="kernel menuconfig file">
+
+<p>And you can move the cursor to different options to set them. Because of space, how to configure these options correctly can not be presented. For more detailed knowledge, you can find them in the linux orgnization.</p>
+<h4 id="2-Compile-and-build"><a href="#2-Compile-and-build" class="headerlink" title="(2). Compile and build"></a>(2). Compile and build</h4><p>Now, it is time to get into the marrow of the second part: Compile &amp;&amp; Build. Please make sure that command <code>make</code> and <code>gcc</code> is installed on your machine firstly.<br>Just type <code>make</code> and all related source code about kernel will be compiled and built, the default Makefile rule will handle everything.</p>
+<p></p><figure class="highlight plain hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">make</span><br></pre></td></tr></tbody></table></figure><p></p>
+<p>In general, one flaw about the <code>make</code> method is that this action spawns only a single job because Makefiles all too often have incorrect dependency information. With incorrect dependencies, multiple jobs can step on each other&#x2019;s toes, resulting in errors in the build process. However, The kernel&#x2019;s Makefile have correct dependency information, so spawning multiple jobs does not result in failures. To build the kernel with multiple make jobs, use</p>
+<p></p><figure class="highlight plain hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">make -jn</span><br></pre></td></tr></tbody></table></figure><p></p>
+<p>The n here is number of jobs to spawn. Usual practice is to spawn one or two jobs per processor. If you have 16 processors in you machine, then you might do</p>
+<p></p><figure class="highlight plain hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">make -j32</span><br></pre></td></tr></tbody></table></figure><p></p>
+<p>The resulting kernel file is &#x201C;arch/x86/boot/bzImage&#x201D; (in x86 platform).</p>
+<h3 id="3-Installation"><a href="#3-Installation" class="headerlink" title="3. Installation"></a>3. Installation</h3><p>After the kernel is built, you can install it. It is possible that the kernel you install cannot boot successfully, so in case of that, you should have at least two kernel installed on you machine so that you can choose the another one to boot.</p>
+<h4 id="1-Install-modules"><a href="#1-Install-modules" class="headerlink" title="(1). Install modules"></a>(1). Install modules</h4><p>Installing modules, thankfully, is automated and architecture-independent. As root, simply run</p>
+<p></p><figure class="highlight plain hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">make modules_install</span><br></pre></td></tr></tbody></table></figure><p></p>
+<p>After this, you will find a module file under <strong>/lib/modules/a.b.c</strong> where a.b.c is the kernel version.</p>
+<h4 id="2-Install-kernel"><a href="#2-Install-kernel" class="headerlink" title="(2). Install kernel"></a>(2). Install kernel</h4><p>As root user, simply run</p>
+<p></p><figure class="highlight plain hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">make install</span><br></pre></td></tr></tbody></table></figure><p></p>
+<p>After this, a new kernel file and a new boot image will appear in the <strong>/boot</strong> directory.</p>
+<h4 id="3-Set-booting-order"><a href="#3-Set-booting-order" class="headerlink" title="(3). Set booting order"></a>(3). Set booting order</h4><p>If you execute all the steps normally, new content about the new installed kernel has been added to <strong>/boot/grub/grub.conf</strong> file. And you can edit the <strong>grub.conf</strong> file to choose to use which kernel when booting.</p>
+<img src="/2016/03/23/Compile-your-own-linux-kernel/kernel-grub.png" class title="kernel grub file">
+
+<p>Reboot the machine, and then you will find the new installed kernel in the booting screen.</p>
+<img src="/2016/03/23/Compile-your-own-linux-kernel/kernel-booting.png" class title="booting file">
+
+<p>[1]: Love, Robert Love. (2003). Linux Kernel Development, 3, 40-42</p>
+<p>[3]: Love, Robert Love. (2003). Linux Kernel Development, 3, 42-43<br>[4]: Love, Robert Love. (2003). Linux Kernel Development, 3, 43-45</p>
+</body></html>
+    
+    </div>
+    
+    <div class="columns is-variable is-1 is-multiline is-mobile">
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/kernel/">#kernel</a></span>
+    
+    </div>
+    
+    
+    <div class="columns is-mobile is-multiline article-nav">
+        <span class="column is-12-mobile is-half-desktop  article-nav-prev">
+            
+            <a href="/2016/04/12/Read-and-Write-functions-in-linux/">Read and Write functions in linux</a>
+            
+        </span>
+        <span class="column is-12-mobile is-half-desktop is-hidden-mobile article-nav-next">
+            
+        </span>
+    </div>
+    
+</article>
+
+
+
+
+    </div>
+</section>
+    <footer class="footer">
+    <div class="container">
+        <div class="columns content">
+            <div class="column is-narrow has-text-centered">
+                &copy; 2020 Jin Cai&nbsp;
+                Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> & <a
+                        href="http://github.com/ppoffice/hexo-theme-minos">Minos</a>
+            </div>
+            <div class="column is-hidden-mobile"></div>
+
+            
+            
+        </div>
+    </div>
+</footer>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment-with-locales.min.js"></script>
+
+<!-- test if the browser is outdated -->
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" href="http://outdatedbrowser.com/" target="_blank" rel="noopener">Update my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // plugin function, place inside DOM ready function
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        })
+    });
+</script>
+
+<script>
+    window.FontAwesomeConfig = {
+        searchPseudoElements: true
+    }
+    moment.locale("en-AU");
+</script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+    
+</body>
+</html>

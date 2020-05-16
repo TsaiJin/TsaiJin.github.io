@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+<head>
+    <meta charset="utf-8">
+<title>Redo log in InnoDB</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
+
+
+
+
+<meta name="description" content="">
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ovo|Source+Code+Pro">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/css/lightgallery.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/css/justifiedGallery.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+<script defer src="//use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
+
+
+<meta name="generator" content="Hexo 4.2.1"></head>
+<body>
+    
+<nav class="navbar is-transparent is-fixed-top navbar-main" role="navigation" aria-label="main navigation">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item navbar-logo" href="/">
+                
+                <img src="/images/logo.png" alt="" height="28">
+                
+            </a>
+            <div class="navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="navbar-menu navbar-start">
+            
+            <a class="navbar-item "
+               href="/archives">Archives</a>
+            
+            <a class="navbar-item "
+               href="/categories/Technology">Technology</a>
+            
+        </div>
+        
+        <div class="navbar-menu navbar-end">
+            
+            
+            
+        </div>
+    </div>
+</nav>
+
+    <section class="section">
+    <div class="container">
+    <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            Redo log in InnoDB
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            <time datetime="2016-07-09T09:33:15.000Z" itemprop="datePublished">Jul 9 2016</time>
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/categories/Technology/">Technology</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
+            
+            
+            5 minutes read (About 689 words)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><h2 id="What-is-redo-log"><a href="#What-is-redo-log" class="headerlink" title="What is redo log"></a>What is redo log</h2><p>For a relational database, ACID is a set of properties that it must support for a transaction. That is to say, a transaction should be atomic, consistent, isolated and durable under the management of such database.<br>InnoDB, the default storage engine since MySQL 5.5, use a method called <strong>redo log</strong> to implement the durability of a transaction. Redo log consists of redo log buffer and redo log file.<br>The redo log buffer resides in memory and is volatile while the redo log file resides in disks and is durable. Redo log records the information about a transaction. As the literal meaning of words redo log denotes, you can redo your operations after the system crashes by redo log.</p>
+<a id="more"></a>
+
+<h2 id="How-does-it-work"><a href="#How-does-it-work" class="headerlink" title="How does it work"></a>How does it work</h2><p>As a transaction-based storage engine, InnoDB uses &#x201C;force log at commit&#x201D; mechanism to achieve durability.<br>So before a transaction is committed, all logs of that transaction must be flushed to redo log files. Even though the whole system crashes during the process of transaction commit, this transaction can be recovered by the redo log file after the system boots up again.<br>There exist a redo log memory buffer where the redo log is written to boost system performance. To ensure that redo log is written to redo log file successfully each time, the InnoDB storage engine need to call the <code>fsync</code> because <code>O_DIRECT</code> flag is not used when open redo log so that redo log is written to file system buffer firstly. Nevertheless, the time consumed by <code>fsync</code> call is up to the performance of disk. Consequently, the performance of disk determines the performance of transaction commit.<a href="http://dev.mysql.com/doc/refman/5.7/en/innodb-parameters.html" target="_blank" rel="noopener">Reference1</a></p>
+<p>Taking account of the performance problem mentioned previously, the InnoDB storage engine allows user to set up the frequency of calling <code>fsync</code>. Specifically, parameter <code>innodb_flush_log_at_trx_commit</code> is used for frequency management. <code>innodb_flush_log_at_trx_commit</code> controls the balance between strict ACID compliance for commit operations, and higher performance that is possible when commit-related I/O operations are rearranged and done in batches. You can achieve better performance by changing the default value, but then you can lose up to a second of transactions in a crash.</p>
+<ul>
+<li>The default value of 1 is required for full ACID compliance. With this value, the contents of the InnoDB log buffer are written out to the log file at each transaction commit and the log file is flushed to disk.</li>
+<li>With a value of 0, the contents of the InnoDB log buffer are written to the log file approximately once per second and the log file is flushed to disk. No writes from the log buffer to the log file are performed at transaction commit. Once-per-second flushing is not 100% guaranteed to happen every second, due to process scheduling issues. Because the flush to disk operation only occurs approximately once per second, you can lose up to a second of transactions with any mysqld process crash</li>
+<li>With a value of 2, the contents of the InnoDB log buffer are written to the log file after each transaction commit and the log file is flushed to disk approximately once per second. Once-per-second flushing is not 100% guaranteed to happen every second, due to process scheduling issues. Because the flush to disk operation only occurs approximately once per second, you can lose up to a second of transactions in an operating system crash or a power outage.<a href="https://book.douban.com/subject/25872763/" target="_blank" rel="noopener">Reference2</a></li>
+</ul>
+<h2 id="The-format-of-redo-log-file"><a href="#The-format-of-redo-log-file" class="headerlink" title="The format of redo log file"></a>The format of redo log file</h2><p>In InnoDB storage engine, the redo logs are stored in 512-byte format. This means that redo log cache, redo log files are both kept in blocks and each bock has a size of 512 bytes. Besides the log itself in block, log block header and lock block tailer are also stored in each block. In a redo log block, 12 bytes and 8 bytes are occupied by redo log header and redo log tailer respectively(So real information stored in each block is 492 bytes).</p>
+<img src="/2016/07/09/Redo-log-in-InnoDB/redo-log-block.jpg" class title="image of redo log file">
+</body></html>
+    
+    </div>
+    
+    <div class="columns is-variable is-1 is-multiline is-mobile">
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/database/">#database</a></span>
+    
+    </div>
+    
+    
+    <div class="columns is-mobile is-multiline article-nav">
+        <span class="column is-12-mobile is-half-desktop  article-nav-prev">
+            
+            <a href="/2020/05/16/The-mechanism-behind-WriteBatch-in-leveldb/">The mechanism behind WriteBatch in leveldb</a>
+            
+        </span>
+        <span class="column is-12-mobile is-half-desktop  article-nav-next">
+            
+            <a href="/2016/04/12/Read-and-Write-functions-in-linux/">Read and Write functions in linux</a>
+            
+        </span>
+    </div>
+    
+</article>
+
+
+
+
+    </div>
+</section>
+    <footer class="footer">
+    <div class="container">
+        <div class="columns content">
+            <div class="column is-narrow has-text-centered">
+                &copy; 2020 Jin Cai&nbsp;
+                Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> & <a
+                        href="http://github.com/ppoffice/hexo-theme-minos">Minos</a>
+            </div>
+            <div class="column is-hidden-mobile"></div>
+
+            
+            
+        </div>
+    </div>
+</footer>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment-with-locales.min.js"></script>
+
+<!-- test if the browser is outdated -->
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" href="http://outdatedbrowser.com/" target="_blank" rel="noopener">Update my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // plugin function, place inside DOM ready function
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        })
+    });
+</script>
+
+<script>
+    window.FontAwesomeConfig = {
+        searchPseudoElements: true
+    }
+    moment.locale("en-AU");
+</script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+    
+</body>
+</html>
