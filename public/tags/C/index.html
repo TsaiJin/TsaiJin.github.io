@@ -2,7 +2,7 @@
 <html class="has-navbar-fixed-top">
 <head>
     <meta charset="utf-8">
-<title>Tags</title>
+<title>Tag: C</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
 <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
@@ -80,39 +80,56 @@
     <section class="section section-heading">
     <div class="container">
         <div class="content">
-            <h5>#Tags</h5>
+            <h5>#C</h5>
         </div>
     </div>
 </section>
 <section class="section">
     <div class="container">
-        <div class="columns is-variable is-1 is-multiline is-mobile">
+    
+        <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            <a href="/2016/04/12/Read-and-Write-functions-in-linux/" itemprop="url">Read and Write functions in linux</a>
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            <time datetime="2016-04-12T13:43:21.000Z" itemprop="datePublished">Apr 12 2016</time>
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/categories/Technology/">Technology</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
             
-            <span class="column is-narrow">
-                <a class="tag is-light article-tag" href="/tags/database/">#database&nbsp;(2)</a>
-            </span>
             
-            <span class="column is-narrow">
-                <a class="tag is-light article-tag" href="/tags/kernel/">#kernel&nbsp;(1)</a>
-            </span>
-            
-            <span class="column is-narrow">
-                <a class="tag is-light article-tag" href="/tags/linux/">#linux&nbsp;(2)</a>
-            </span>
-            
-            <span class="column is-narrow">
-                <a class="tag is-light article-tag" href="/tags/C/">#C&nbsp;(1)</a>
-            </span>
-            
-            <span class="column is-narrow">
-                <a class="tag is-light article-tag" href="/tags/mysql/">#mysql&nbsp;(1)</a>
-            </span>
-            
-            <span class="column is-narrow">
-                <a class="tag is-light article-tag" href="/tags/leveldb/">#leveldb&nbsp;(1)</a>
-            </span>
-            
-        </div>
+            5 minutes read (About 743 words)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><p>Resulting from work, I have learned I/O models of the linux operating system during these days. In linux operating system, various read and write APIs are provided to user space for use. Comparasions between them are illustraed below.</p>
+<h3 id="read"><a href="#read" class="headerlink" title="read()"></a>read()</h3><p><epacse hidden>19</epacse></p>
+<p><code>read()</code> is the basic read function in linux environment. It attempts to read up to count bytes from file descriptor fd into the buffer starting at buf.<br>It will start from current file offset. And the current file offset will be increased by the number of bytes read. However, if current file offset is at or past the end of operating file, no bytes will be read into buffer.<br>On success, the number of bytes read is returned (zero indicates end of file), and the file position is advanced by this number. It is not an error if this number is smaller than the number of bytes requested; this may happen for example because fewer bytes are actually available right now (maybe because we were close to end-of-file, or because we are reading from a pipe, or from a terminal), or because <code>read()</code> was interrupted by a signal. On error, -1 is returned, and errno is set appropriately. In this case it is left unspecified whether the file position (if any) changes.<a href="http://linux.die.net/man/2/read" target="_blank" rel="noopener">Reference</a><br><code>read()</code> is thread safe in the sense that your program will not have undefined behavior (crash or hung) if multiple threads perform IO on the same open file using at once. But the order and atomicity of these operations could vary greatly depending on the type of the file and the implementation of program.</p></body></html>
+        <p class="article-more-link">
+            <a href="/2016/04/12/Read-and-Write-functions-in-linux/#more">Read More</a>
+        </p>
+    
+    </div>
+    
+    
+</article>
+
+
+
+
+    
+    
     </div>
 </section>
     <footer class="footer">

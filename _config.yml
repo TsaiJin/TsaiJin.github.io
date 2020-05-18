@@ -109,3 +109,7 @@ deploy:
 comment:
   type: disqus
   shortname: tsaijin
+
+share:
+  type: sharethis
+  install_url: //platform-api.sharethis.com/js/sharethis.js#property=5ec2bc1420a82d001993a743&product=inline-share-buttons&cms=sop

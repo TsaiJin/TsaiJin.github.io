@@ -2,7 +2,7 @@
 <html class="has-navbar-fixed-top">
 <head>
     <meta charset="utf-8">
-<title>Tags</title>
+<title>Tag: leveldb</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
 <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
@@ -80,39 +80,58 @@
     <section class="section section-heading">
     <div class="container">
         <div class="content">
-            <h5>#Tags</h5>
+            <h5>#leveldb</h5>
         </div>
     </div>
 </section>
 <section class="section">
     <div class="container">
-        <div class="columns is-variable is-1 is-multiline is-mobile">
+    
+        <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            <a href="/2020/05/16/The-mechanism-behind-WriteBatch-in-leveldb/" itemprop="url">The mechanism behind WriteBatch in leveldb</a>
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            <time datetime="2020-05-16T12:59:09.000Z" itemprop="datePublished">May 16 2020</time>
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/categories/Technology/">Technology</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
             
-            <span class="column is-narrow">
-                <a class="tag is-light article-tag" href="/tags/database/">#database&nbsp;(2)</a>
-            </span>
             
-            <span class="column is-narrow">
-                <a class="tag is-light article-tag" href="/tags/kernel/">#kernel&nbsp;(1)</a>
-            </span>
-            
-            <span class="column is-narrow">
-                <a class="tag is-light article-tag" href="/tags/linux/">#linux&nbsp;(2)</a>
-            </span>
-            
-            <span class="column is-narrow">
-                <a class="tag is-light article-tag" href="/tags/C/">#C&nbsp;(1)</a>
-            </span>
-            
-            <span class="column is-narrow">
-                <a class="tag is-light article-tag" href="/tags/mysql/">#mysql&nbsp;(1)</a>
-            </span>
-            
-            <span class="column is-narrow">
-                <a class="tag is-light article-tag" href="/tags/leveldb/">#leveldb&nbsp;(1)</a>
-            </span>
-            
-        </div>
+            9 minutes read (About 1362 words)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><h3 id="Introduction"><a href="#Introduction" class="headerlink" title="Introduction"></a>Introduction</h3><p>As a well-known key-value database,<a href="https://github.com/google/leveldb" target="_blank" rel="noopener"> leveldb</a> provides general key-values interfaces like Put, Get and Delete. Besides those interfaces, leveldb provides a batch operation called WriteBatch as well. A batch operation means we can group multiple operations into one and submit this one to leveldb, the atomicity guarantees that either all of those operations are applied or none of them is applied.</p>
+<p>For example, we can use batch operation in leveldb in the following way:</p>
+<p><epacse hidden>0</epacse></p>
+<p>The updates are applied in the order in which they are added to the WriteBatch. And the value of &#x201C;key&#x201D; in the above code sample will be &#x201C;v3&#x201D; after the batch is written.</p>
+<h3 id="Implementaion-of-WriteBatch"><a href="#Implementaion-of-WriteBatch" class="headerlink" title="Implementaion of WriteBatch"></a>Implementaion of WriteBatch</h3><p>Well, how does leveldb implement this simple but powerful interface? Let&#x2019;s figure it out by digging the source code step by step.</p></body></html>
+        <p class="article-more-link">
+            <a href="/2020/05/16/The-mechanism-behind-WriteBatch-in-leveldb/#more">Read More</a>
+        </p>
+    
+    </div>
+    
+    
+</article>
+
+
+
+
+    
+    
     </div>
 </section>
     <footer class="footer">
