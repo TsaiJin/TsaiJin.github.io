@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+<head>
+    <meta charset="utf-8">
+<title>The mechanism behind WriteBatch in leveldb</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
+
+
+
+
+<meta name="description" content="">
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ovo|Source+Code+Pro">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/css/lightgallery.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/css/justifiedGallery.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+<script defer src="//use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
+
+
+<meta name="generator" content="Hexo 4.2.1"></head>
+<body>
+    
+<nav class="navbar is-transparent is-fixed-top navbar-main" role="navigation" aria-label="main navigation">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item navbar-logo" href="/">
+                
+                <img src="/images/logo.png" alt="" height="28">
+                
+            </a>
+            <div class="navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="navbar-menu navbar-start">
+            
+            <a class="navbar-item "
+               href="/archives">Archives</a>
+            
+            <a class="navbar-item "
+               href="/categories/Technology">Technology</a>
+            
+        </div>
+        
+        <div class="navbar-menu navbar-end">
+            
+            
+            
+        </div>
+    </div>
+</nav>
+
+    <section class="section">
+    <div class="container">
+    <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            The mechanism behind WriteBatch in leveldb
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            <time datetime="2020-05-16T12:59:09.000Z" itemprop="datePublished">May 16 2020</time>
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/categories/Technology/">Technology</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
+            
+            
+            9 minutes read (About 1362 words)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><h3 id="Introduction"><a href="#Introduction" class="headerlink" title="Introduction"></a>Introduction</h3><p>As a well-known key-value database,<a href="https://github.com/google/leveldb" target="_blank" rel="noopener"> leveldb</a> provides general key-values interfaces like Put, Get and Delete. Besides those interfaces, leveldb provides a batch operation called WriteBatch as well. A batch operation means we can group multiple operations into one and submit this one to leveldb, the atomicity guarantees that either all of those operations are applied or none of them is applied.</p>
+<p>For example, we can use batch operation in leveldb in the following way:</p>
+<p></p><figure class="highlight c++ hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">WriteBatch b;</span><br><span class="line">batch.Put(<span class="hljs-string">&quot;key&quot;</span>, <span class="hljs-string">&quot;v1&quot;</span>);</span><br><span class="line">batch.Delete(<span class="hljs-string">&quot;key&quot;</span>);</span><br><span class="line">batch.Put(<span class="hljs-string">&quot;key&quot;</span>, <span class="hljs-string">&quot;v2&quot;</span>);</span><br><span class="line">batch.Put(<span class="hljs-string">&quot;key&quot;</span>, <span class="hljs-string">&quot;v3&quot;</span>);</span><br><span class="line">db-&gt;Write(WriteOptions(), &amp;b);</span><br></pre></td></tr></tbody></table></figure><p></p>
+<p>The updates are applied in the order in which they are added to the WriteBatch. And the value of &#x201C;key&#x201D; in the above code sample will be &#x201C;v3&#x201D; after the batch is written.</p>
+<h3 id="Implementaion-of-WriteBatch"><a href="#Implementaion-of-WriteBatch" class="headerlink" title="Implementaion of WriteBatch"></a>Implementaion of WriteBatch</h3><p>Well, how does leveldb implement this simple but powerful interface? Let&#x2019;s figure it out by digging the source code step by step.</p>
+<a id="more"></a>
+
+
+
+<h4 id="WriteBatch-Class"><a href="#WriteBatch-Class" class="headerlink" title="WriteBatch Class"></a>WriteBatch Class</h4><p>The <code>WriteBatch</code> is a class containing member function <code>WriteBatch::Put</code>, <code>WriteBatch::Delete</code>,<code>WriteBatch::Clear</code> and <code>WriteBatch::Iterate</code>. A private member variable of string type called <code>rep_</code> is also owned by it.</p>
+<p>In the constructor of <code>WriteBatch</code>, <code>rep_</code> is cleared firstly and resize to length <code>kHeader</code>:</p>
+<p></p><figure class="highlight c++ hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-keyword">static</span> <span class="hljs-keyword">const</span> <span class="hljs-keyword">size_t</span> kHeader = <span class="hljs-number">12</span>;</span><br><span class="line"></span><br><span class="line">WriteBatch::WriteBatch() {</span><br><span class="line">  Clear();</span><br><span class="line">}</span><br><span class="line"></span><br><span class="line"><span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">WriteBatch::Clear</span><span class="hljs-params">()</span> </span>{</span><br><span class="line">  rep_.<span class="hljs-built_in">clear</span>();</span><br><span class="line">  rep_.resize(kHeader);</span><br><span class="line">}</span><br></pre></td></tr></tbody></table></figure><p></p>
+<p>That&#x2019;s because the first <code>kHeader</code> bytes in <code>rep_</code> is used to maintain meta information: 8-byte sequence number and followed by a 4-byte count.</p>
+<p>Each time when the user calls <code>WriteBatch::Put</code>, the <code>rep_</code> variable gets updated by the following behaviors :</p>
+<p></p><figure class="highlight c++ hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">WriteBatch::Put</span><span class="hljs-params">(<span class="hljs-keyword">const</span> Slice&amp; key, <span class="hljs-keyword">const</span> Slice&amp; value)</span> </span>{</span><br><span class="line">  WriteBatchInternal::SetCount(<span class="hljs-keyword">this</span>, WriteBatchInternal::Count(<span class="hljs-keyword">this</span>) + <span class="hljs-number">1</span>);</span><br><span class="line">  rep_.push_back(<span class="hljs-keyword">static_cast</span>&lt;<span class="hljs-keyword">char</span>&gt;(kTypeValue));</span><br><span class="line">  PutLengthPrefixedSlice(&amp;rep_, key);</span><br><span class="line">  PutLengthPrefixedSlice(&amp;rep_, value);</span><br><span class="line">}</span><br></pre></td></tr></tbody></table></figure><p></p>
+<p>Consequently, the 4-byte count in <code>rep_</code> gets incremented, and an enum char value <code>kTypeValue</code>(means this is a put operation), the key and the value are appended into the end of <code>rep_</code>.</p>
+<p>Similarly, when the user calls <code>WriteBatch::Delete</code>, the <code>rep_</code> variable is updated in a similar way:</p>
+<p></p><figure class="highlight c++ hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">WriteBatch::Delete</span><span class="hljs-params">(<span class="hljs-keyword">const</span> Slice&amp; key)</span> </span>{</span><br><span class="line">  WriteBatchInternal::SetCount(<span class="hljs-keyword">this</span>, WriteBatchInternal::Count(<span class="hljs-keyword">this</span>) + <span class="hljs-number">1</span>);</span><br><span class="line">  rep_.push_back(<span class="hljs-keyword">static_cast</span>&lt;<span class="hljs-keyword">char</span>&gt;(kTypeDeletion));</span><br><span class="line">  PutLengthPrefixedSlice(&amp;rep_, key);</span><br><span class="line">}</span><br></pre></td></tr></tbody></table></figure><p></p>
+<p>Excepting that an enum char value <code>kTypeDeletion</code>(means this is a put operation) and the key information are appended into the <code>rep_</code>.</p>
+<p>Let&#x2019;s be more specific about the function <code>PutLengthPrefixedSlice</code> called by both <code>WriteBatch::Delete</code>and <code>WriteBatch::Put</code>:</p>
+<p></p><figure class="highlight c++ hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">PutLengthPrefixedSlice</span><span class="hljs-params">(<span class="hljs-built_in">std</span>::<span class="hljs-built_in">string</span>* dst, <span class="hljs-keyword">const</span> Slice&amp; value)</span> </span>{</span><br><span class="line">  PutVarint32(dst, value.<span class="hljs-built_in">size</span>());</span><br><span class="line">  dst-&gt;append(value.data(), value.<span class="hljs-built_in">size</span>());</span><br><span class="line">}</span><br></pre></td></tr></tbody></table></figure><p></p>
+<p>It appends the value size into dst and then the value itself into dst.</p>
+<p>Based on all the information provided above, we know that the <code>Put</code> and <code>Delete</code> member function of <code>WriteBatch</code> only update its member variable <code>rep_</code>. </p>
+<p>And we can also know the data layout format of <code>rep_</code>: </p>
+<p></p><figure class="highlight plain hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">WriteBatch::rep_ :=</span><br><span class="line">      sequence: fixed64</span><br><span class="line">      count: fixed32</span><br><span class="line">      data: record[count]</span><br><span class="line">record :=</span><br><span class="line">      kTypeValue varstring varstring         |</span><br><span class="line">      kTypeDeletion varstring</span><br><span class="line">varstring :=</span><br><span class="line">      len: varint32</span><br><span class="line">      data: uint8[len]</span><br></pre></td></tr></tbody></table></figure><p></p>
+<img src="/2020/05/16/The-mechanism-behind-WriteBatch-in-leveldb/rep_format.png" class title="image of rep_ format">
+
+
+
+<h4 id="DBImpl-Write"><a href="#DBImpl-Write" class="headerlink" title="DBImpl::Write"></a>DBImpl::Write</h4><p>After a batch operation is encapsulated, it&#x2019;s time to call <code>DBImpl::Write</code> to apply the batch operation into the underlying layer to persist it.</p>
+<p>Inside <code>DBImpl::Write</code>, an instance of <code>Writer</code> called <code>w</code> , which represents the batch operation context, is created and added to the end of the double-ended queue <code>writers_</code>.  Because write operation is in strict order, so the write thread must wait until <code>w</code> is the first element of <code>writers_</code>.</p>
+<p></p><figure class="highlight c++ hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-function">Writer <span class="hljs-title">w</span><span class="hljs-params">(&amp;mutex_)</span></span>;</span><br><span class="line">  w.batch = my_batch;</span><br><span class="line">  w.sync = options.sync;</span><br><span class="line">  w.done = <span class="hljs-literal">false</span>;</span><br><span class="line"></span><br><span class="line">  <span class="hljs-function">MutexLock <span class="hljs-title">l</span><span class="hljs-params">(&amp;mutex_)</span></span>;</span><br><span class="line">  writers_.push_back(&amp;w);</span><br><span class="line">  <span class="hljs-keyword">while</span> (!w.done &amp;&amp; &amp;w != writers_.front()) {</span><br><span class="line">    w.cv.Wait();</span><br><span class="line">  }</span><br><span class="line">  <span class="hljs-keyword">if</span> (w.done) {</span><br><span class="line">    <span class="hljs-keyword">return</span> w.status;</span><br><span class="line">  }</span><br></pre></td></tr></tbody></table></figure><p></p>
+<p>When the condition is fulfilled, leveldb will make sure there is enough room for this batch operation. Enough room mainly means memtable is prepared well to handle this write (I will write another new article to talk about that). Because <code>w</code> becomes the first element in <code>writers_</code>, the write thread will try to group other writers behind <code>w</code> into a so-called <code>BatchGroup</code> to speed up the io efficiency by the function <code>DBImpl::BuildBatchGroup</code>.</p>
+<p></p><figure class="highlight c++ hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-function">WriteBatch* <span class="hljs-title">DBImpl::BuildBatchGroup</span><span class="hljs-params">(Writer** last_writer)</span> </span>{</span><br><span class="line">  assert(!writers_.empty());</span><br><span class="line">  Writer* first = writers_.front();</span><br><span class="line">  WriteBatch* result = first-&gt;batch;</span><br><span class="line">  assert(result != <span class="hljs-literal">NULL</span>);</span><br><span class="line"></span><br><span class="line">  <span class="hljs-keyword">size_t</span> <span class="hljs-built_in">size</span> = WriteBatchInternal::ByteSize(first-&gt;batch);</span><br><span class="line"></span><br><span class="line">  <span class="hljs-comment">// Allow the group to grow up to a maximum size, but if the</span></span><br><span class="line">  <span class="hljs-comment">// original write is small, limit the growth so we do not slow</span></span><br><span class="line">  <span class="hljs-comment">// down the small write too much.</span></span><br><span class="line">  <span class="hljs-keyword">size_t</span> max_size = <span class="hljs-number">1</span> &lt;&lt; <span class="hljs-number">20</span>; <span class="hljs-comment">// 1M</span></span><br><span class="line">  <span class="hljs-keyword">if</span> (<span class="hljs-built_in">size</span> &lt;= (<span class="hljs-number">128</span>&lt;&lt;<span class="hljs-number">10</span>)) { <span class="hljs-comment">// 128K</span></span><br><span class="line">    max_size = <span class="hljs-built_in">size</span> + (<span class="hljs-number">128</span>&lt;&lt;<span class="hljs-number">10</span>);</span><br><span class="line">  }</span><br><span class="line"></span><br><span class="line">  *last_writer = first;</span><br><span class="line">  <span class="hljs-built_in">std</span>::<span class="hljs-built_in">deque</span>&lt;Writer*&gt;::iterator iter = writers_.<span class="hljs-built_in">begin</span>();</span><br><span class="line">  ++iter;  <span class="hljs-comment">// Advance past &quot;first&quot;</span></span><br><span class="line">  <span class="hljs-keyword">for</span> (; iter != writers_.<span class="hljs-built_in">end</span>(); ++iter) {</span><br><span class="line">    Writer* w = *iter;</span><br><span class="line">    <span class="hljs-keyword">if</span> (w-&gt;sync &amp;&amp; !first-&gt;sync) {</span><br><span class="line">      <span class="hljs-comment">// Do not include a sync write into a batch handled by a non-sync write.</span></span><br><span class="line">      <span class="hljs-keyword">break</span>;</span><br><span class="line">    }</span><br><span class="line"></span><br><span class="line">    <span class="hljs-keyword">if</span> (w-&gt;batch != <span class="hljs-literal">NULL</span>) {</span><br><span class="line">      <span class="hljs-built_in">size</span> += WriteBatchInternal::ByteSize(w-&gt;batch);</span><br><span class="line">      <span class="hljs-keyword">if</span> (<span class="hljs-built_in">size</span> &gt; max_size) {</span><br><span class="line">        <span class="hljs-comment">// Do not make batch too big</span></span><br><span class="line">        <span class="hljs-keyword">break</span>;</span><br><span class="line">      }</span><br><span class="line"></span><br><span class="line">      <span class="hljs-comment">// Append to *result</span></span><br><span class="line">      <span class="hljs-keyword">if</span> (result == first-&gt;batch) {</span><br><span class="line">        <span class="hljs-comment">// Switch to temporary batch instead of disturbing caller&apos;s batch</span></span><br><span class="line">        result = tmp_batch_;</span><br><span class="line">        assert(WriteBatchInternal::Count(result) == <span class="hljs-number">0</span>);</span><br><span class="line">        WriteBatchInternal::Append(result, first-&gt;batch);</span><br><span class="line">      }</span><br><span class="line">      WriteBatchInternal::Append(result, w-&gt;batch);</span><br><span class="line">    }</span><br><span class="line">    *last_writer = w;</span><br><span class="line">  }</span><br><span class="line">  <span class="hljs-keyword">return</span> result;</span><br><span class="line">}</span><br></pre></td></tr></tbody></table></figure><p></p>
+<p>Inside <code>DBImpl::BuildBatchGroup</code>, it will traverse the whole <code>writers_</code> from beginning to end and try to group all  those batches into one batch. For convenience to clarify, we call this procedure &#x201C;batch mergence&#x201D;</p>
+<p>However, there are some limitations in batch mergence. First, the maximum size of <code>rep_</code> in the merged batch group is <strong>1M</strong> and if the first writer is a small writer(<code>rep_.size() &lt;= 128K</code> ) it will limit the maximum size to <code>rep_.size() + 128K</code>. The idea behind this is not slowing down the small write too much. Second, it will not include a sync write into the batch handled by a non-sync write.</p>
+<p>In the batch mergence, with the help of <code>WriteBatchInternal::Append</code>, the data field of <code>rep_</code> in second batch is appended to the end of the <code>rep_</code> in first batch:</p>
+<p></p><figure class="highlight c++ hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">WriteBatchInternal::Append</span><span class="hljs-params">(WriteBatch* dst, <span class="hljs-keyword">const</span> WriteBatch* src)</span> </span>{</span><br><span class="line">  SetCount(dst, Count(dst) + Count(src));</span><br><span class="line">  assert(src-&gt;rep_.<span class="hljs-built_in">size</span>() &gt;= kHeader);</span><br><span class="line">  dst-&gt;rep_.append(src-&gt;rep_.data() + kHeader, src-&gt;rep_.<span class="hljs-built_in">size</span>() - kHeader);</span><br><span class="line">}</span><br></pre></td></tr></tbody></table></figure><p></p>
+<p>After batch mergence is finished, a new batch called <code>updates</code> is generated. And the sequence number in <code>rep_</code> of <code>updates</code> is set to <code>last_sequence + 1</code>, <code>last_sequnce</code> gets adjusted to a new one(<code>last_sequnce = last_sequnce + count field rep_ of updates</code>) as well.</p>
+<p>Now, we come to the IO critical path. The WAL in leveldb will persist the contents of the <code>update</code> in an append-only way. After that success, memtable will replay the operations in the batch <code>update</code> and do corresponding behavior in memtable:</p>
+<p>Apply to WAL and insert into memtable:</p>
+<p></p><figure class="highlight c++ hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">{</span><br><span class="line">      mutex_.Unlock();</span><br><span class="line">      status = log_-&gt;AddRecord(WriteBatchInternal::Contents(updates));</span><br><span class="line">      <span class="hljs-keyword">bool</span> sync_error = <span class="hljs-literal">false</span>;</span><br><span class="line">      <span class="hljs-keyword">if</span> (status.ok() &amp;&amp; options.sync) {</span><br><span class="line">        status = logfile_-&gt;Sync();</span><br><span class="line">        <span class="hljs-keyword">if</span> (!status.ok()) {</span><br><span class="line">          sync_error = <span class="hljs-literal">true</span>;</span><br><span class="line">        }</span><br><span class="line">      }</span><br><span class="line">      <span class="hljs-keyword">if</span> (status.ok()) {</span><br><span class="line">        status = WriteBatchInternal::InsertInto(updates, mem_);</span><br><span class="line">      }</span><br><span class="line">      mutex_.Lock();</span><br><span class="line">      <span class="hljs-keyword">if</span> (sync_error) {</span><br><span class="line">        <span class="hljs-comment">// The state of the log file is indeterminate: the log record we</span></span><br><span class="line">        <span class="hljs-comment">// just added may or may not show up when the DB is re-opened.</span></span><br><span class="line">        <span class="hljs-comment">// So we force the DB into a mode where all future writes fail.</span></span><br><span class="line">        RecordBackgroundError(status);</span><br><span class="line">      }</span><br><span class="line">    }</span><br></pre></td></tr></tbody></table></figure><p></p>
+<p><code>WriteBatch</code> Parse the whole <code>rep_</code> string to replay original operations specified by users and call handler(MemTableInserter) to handle these operations.</p>
+<p></p><figure class="highlight plain hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line">Status WriteBatch::Iterate(Handler* handler) const {</span><br><span class="line">  Slice input(rep_);</span><br><span class="line">  if (input.size() &lt; kHeader) {</span><br><span class="line">    return Status::Corruption(&quot;malformed WriteBatch (too small)&quot;);</span><br><span class="line">  }</span><br><span class="line"></span><br><span class="line">  input.remove_prefix(kHeader);</span><br><span class="line">  Slice key, value;</span><br><span class="line">  int found = 0;</span><br><span class="line">  while (!input.empty()) {</span><br><span class="line">    found++;</span><br><span class="line">    char tag = input[0];</span><br><span class="line">    input.remove_prefix(1);</span><br><span class="line">    switch (tag) {</span><br><span class="line">      case kTypeValue:</span><br><span class="line">        if (GetLengthPrefixedSlice(&amp;input, &amp;key) &amp;&amp;</span><br><span class="line">            GetLengthPrefixedSlice(&amp;input, &amp;value)) {</span><br><span class="line">          handler-&gt;Put(key, value);</span><br><span class="line">        } else {</span><br><span class="line">          return Status::Corruption(&quot;bad WriteBatch Put&quot;);</span><br><span class="line">        }</span><br><span class="line">        break;</span><br><span class="line">      case kTypeDeletion:</span><br><span class="line">        if (GetLengthPrefixedSlice(&amp;input, &amp;key)) {</span><br><span class="line">          handler-&gt;Delete(key);</span><br><span class="line">        } else {</span><br><span class="line">          return Status::Corruption(&quot;bad WriteBatch Delete&quot;);</span><br><span class="line">        }</span><br><span class="line">        break;</span><br><span class="line">      default:</span><br><span class="line">        return Status::Corruption(&quot;unknown WriteBatch tag&quot;);</span><br><span class="line">    }</span><br><span class="line">  }</span><br><span class="line">  if (found != WriteBatchInternal::Count(this)) {</span><br><span class="line">    return Status::Corruption(&quot;WriteBatch has wrong count&quot;);</span><br><span class="line">  } else {</span><br><span class="line">    return Status::OK();</span><br><span class="line">  }</span><br><span class="line">}</span><br></pre></td></tr></tbody></table></figure><p></p>
+<h3 id="Summary"><a href="#Summary" class="headerlink" title="Summary"></a>Summary</h3><p>Hoo, finally get here! This article mainly talks about how batch operation is handled in leveldb. Due to space limitation, other import parts like WAL and Memtable in leveldb cannot be presented here.</p>
+<p>Have fun<del>~</del></p>
+</body></html>
+    
+    </div>
+    
+    <div class="columns is-variable is-1 is-multiline is-mobile">
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/database/">#database</a></span>
+    
+    </div>
+    
+    
+    <div class="columns is-mobile is-multiline article-nav">
+        <span class="column is-12-mobile is-half-desktop is-hidden-mobile article-nav-prev">
+            
+        </span>
+        <span class="column is-12-mobile is-half-desktop  article-nav-next">
+            
+            <a href="/2016/07/09/Redo-log-in-InnoDB/">Redo log in InnoDB</a>
+            
+        </span>
+    </div>
+    
+</article>
+
+
+
+
+    </div>
+</section>
+    <footer class="footer">
+    <div class="container">
+        <div class="columns content">
+            <div class="column is-narrow has-text-centered">
+                &copy; 2020 Jin Cai&nbsp;
+                Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> & <a
+                        href="http://github.com/ppoffice/hexo-theme-minos">Minos</a>
+            </div>
+            <div class="column is-hidden-mobile"></div>
+
+            
+            
+        </div>
+    </div>
+</footer>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment-with-locales.min.js"></script>
+
+<!-- test if the browser is outdated -->
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" href="http://outdatedbrowser.com/" target="_blank" rel="noopener">Update my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // plugin function, place inside DOM ready function
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        })
+    });
+</script>
+
+<script>
+    window.FontAwesomeConfig = {
+        searchPseudoElements: true
+    }
+    moment.locale("en-AU");
+</script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+    
+</body>
+</html>
