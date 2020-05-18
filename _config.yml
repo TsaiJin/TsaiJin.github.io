@@ -102,4 +102,10 @@ menu:
 # Deployment
 ## Docs: https://hexo.io/docs/deployment.html
 deploy:
-  type: ''
+  type: 'git'
+  repo: https://github.com/TsaiJin/TsaiJin.github.io.git
+  branch: master
+
+comment:
+  type: disqus
+  shortname: tsaijin
