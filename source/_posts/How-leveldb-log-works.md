@@ -2,6 +2,7 @@
 title: How leveldb log works
 date: 2020-05-31 21:56:02
 tags: [database, leveldb]
+categories: Technology
 ---
 
 ### Introduction
