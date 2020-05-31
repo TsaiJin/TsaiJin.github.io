@@ -2,7 +2,7 @@
 <html class="has-navbar-fixed-top">
 <head>
     <meta charset="utf-8">
-<title>Categories</title>
+<title>Tag: mysql</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
 <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
@@ -80,19 +80,54 @@
     <section class="section section-heading">
     <div class="container">
         <div class="content">
-            <h5><i class="far fa-folder"></i>Categories</h5>
+            <h5>#mysql</h5>
         </div>
     </div>
 </section>
 <section class="section">
     <div class="container">
-        <div class="columns is-variable is-1 is-multiline is-mobile">
+    
+        <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            <a href="/2016/07/09/Redo-log-in-InnoDB/" itemprop="url">Redo log in InnoDB</a>
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            <time datetime="2016-07-09T09:33:15.000Z" itemprop="datePublished">Jul 9 2016</time>
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/categories/Technology/">Technology</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
             
-            <span class="column is-narrow">
-                <a class="tag is-light article-tag" href="/categories/Technology/">Technology&nbsp;(5)</a>
-            </span>
             
-        </div>
+            5 minutes read (About 689 words)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><h2 id="What-is-redo-log"><a href="#What-is-redo-log" class="headerlink" title="What is redo log"></a>What is redo log</h2><p>For a relational database, ACID is a set of properties that it must support for a transaction. That is to say, a transaction should be atomic, consistent, isolated and durable under the management of such database.<br>InnoDB, the default storage engine since MySQL 5.5, use a method called <strong>redo log</strong> to implement the durability of a transaction. Redo log consists of redo log buffer and redo log file.<br>The redo log buffer resides in memory and is volatile while the redo log file resides in disks and is durable. Redo log records the information about a transaction. As the literal meaning of words redo log denotes, you can redo your operations after the system crashes by redo log.</p></body></html>
+        <p class="article-more-link">
+            <a href="/2016/07/09/Redo-log-in-InnoDB/#more">Read More</a>
+        </p>
+    
+    </div>
+    
+    
+</article>
+
+
+
+
+    
+    
     </div>
 </section>
     <footer class="footer">
