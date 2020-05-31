@@ -14,8 +14,6 @@
 
 
 
-<meta name="keywords" content="Share,Knowledge,Learn">
-
 
 
 
@@ -114,52 +112,10 @@
     <div class="article-entry is-size-6-mobile" itemprop="articleBody">
     
         <html><head></head><body><p>Resulting from work, I have learned I/O models of the linux operating system during these days. In linux operating system, various read and write APIs are provided to user space for use. Comparasions between them are illustraed below.</p>
-<h3 id="read"><a href="#read" class="headerlink" title="read()"></a>read()</h3><p><epacse hidden>19</epacse></p>
+<h3 id="read"><a href="#read" class="headerlink" title="read()"></a>read()</h3><p><epacse hidden>8</epacse></p>
 <p><code>read()</code> is the basic read function in linux environment. It attempts to read up to count bytes from file descriptor fd into the buffer starting at buf.<br>It will start from current file offset. And the current file offset will be increased by the number of bytes read. However, if current file offset is at or past the end of operating file, no bytes will be read into buffer.<br>On success, the number of bytes read is returned (zero indicates end of file), and the file position is advanced by this number. It is not an error if this number is smaller than the number of bytes requested; this may happen for example because fewer bytes are actually available right now (maybe because we were close to end-of-file, or because we are reading from a pipe, or from a terminal), or because <code>read()</code> was interrupted by a signal. On error, -1 is returned, and errno is set appropriately. In this case it is left unspecified whether the file position (if any) changes.<a href="http://linux.die.net/man/2/read" target="_blank" rel="noopener">Reference</a><br><code>read()</code> is thread safe in the sense that your program will not have undefined behavior (crash or hung) if multiple threads perform IO on the same open file using at once. But the order and atomicity of these operations could vary greatly depending on the type of the file and the implementation of program.</p></body></html>
         <p class="article-more-link">
             <a href="/2016/04/12/Read-and-Write-functions-in-linux/#more">Read More</a>
-        </p>
-    
-    </div>
-    
-    
-</article>
-
-
-
-
-    
-        <article class="article content gallery" itemscope itemprop="blogPost">
-    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
-        
-            <a href="/2016/03/23/Compile-your-own-linux-kernel/" itemprop="url">Compile your own linux kernel</a>
-        
-    </h1>
-    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
-        <span class="column is-narrow">
-            <time datetime="2016-03-23T06:33:15.000Z" itemprop="datePublished">Mar 23 2016</time>
-        </span>
-        
-        <span class="column is-narrow article-category">
-            <i class="far fa-folder"></i>
-            <a class="article-category-link" href="/categories/Technology/">Technology</a>
-        </span>
-        
-        
-        <span class="column is-narrow">
-            
-            
-            7 minutes read (About 1090 words)
-        </span>
-        
-    </div>
-    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
-    
-        <html><head></head><body><p>As we know, linux is one of the greatest open source projects in the world and serves millions of enterprises. An open source project means that you can define your own features catering to different application scenarios. All big Internet firms such as Google, Facebook and Aamazon recompile the linux kernel so that features can be added to or removed from the official kernel release version.<br>Compiling the kernel for linux kernel developers is also unavoidable. In the rest part of this post, attention will focus on tutorials on compiling a linux kernel.</p>
-<h3 id="1-Getting-the-kernel-source-of-official-release"><a href="#1-Getting-the-kernel-source-of-official-release" class="headerlink" title="1. Getting the kernel source of official release"></a>1. Getting the kernel source of official release</h3><p>Nothing comes from nothing. So the first thing before compiling a customized kernel is getting source code.<br>I strongly recommend using <code>Git</code> to download and manage the linux kernel source:</p>
-<p><epacse hidden>11</epacse></p></body></html>
-        <p class="article-more-link">
-            <a href="/2016/03/23/Compile-your-own-linux-kernel/#more">Read More</a>
         </p>
     
     </div>
